@@ -9,11 +9,11 @@ class Model(object):
 
     @property
     def vars(self):
-        return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
+        return tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
 
     @property
     def trainable_vars(self):
-        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
+        return tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
 
     @property
     def perturbable_vars(self):
@@ -26,9 +26,10 @@ class Actor(Model):
         self.nb_actions = nb_actions
 
     def __call__(self, obs, reuse=False):
-        with tf.variable_scope(self.name, reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope(self.name, reuse=tf.compat.v1.AUTO_REUSE):
             x = self.network_builder(obs)
-            x = tf.layers.dense(x, self.nb_actions, kernel_initializer=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3))
+            x = tf.compat.v1.layers.dense(x, self.nb_actions,
+                                kernel_initializer=tf.compat.v1.random_uniform_initializer(minval=-3e-3, maxval=3e-3))
             x = tf.nn.tanh(x)
         return x
 
@@ -39,10 +40,11 @@ class Critic(Model):
         self.layer_norm = True
 
     def __call__(self, obs, action, reuse=False):
-        with tf.variable_scope(self.name, reuse=tf.AUTO_REUSE):
-            x = tf.concat([obs, action], axis=-1) # this assumes observation and action can be concatenated
+        with tf.compat.v1.variable_scope(self.name, reuse=tf.compat.v1.AUTO_REUSE):
+            x = tf.concat([obs, action], axis=-1)  # this assumes observation and action can be concatenated
             x = self.network_builder(x)
-            x = tf.layers.dense(x, 1, kernel_initializer=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3), name='output')
+            x = tf.compat.v1.layers.dense(x, 1, kernel_initializer=tf.compat.v1.random_uniform_initializer(minval=-3e-3, maxval=3e-3),
+                                name='output')
         return x
 
     @property

@@ -1,6 +1,7 @@
 import baselines.common.tf_util as U
 import tensorflow as tf
 import numpy as np
+
 try:
     from mpi4py import MPI
 except ImportError:
@@ -35,7 +36,7 @@ class MpiAdam(object):
             globalg = np.copy(localg)
 
         self.t += 1
-        a = stepsize * np.sqrt(1 - self.beta2**self.t)/(1 - self.beta1**self.t)
+        a = stepsize * np.sqrt(1 - self.beta2 ** self.t) / (1 - self.beta1 ** self.t)
         self.m = self.beta1 * self.m + (1 - self.beta1) * globalg
         self.v = self.beta2 * self.v + (1 - self.beta2) * (globalg * globalg)
         step = (- a) * self.m / (np.sqrt(self.v) + self.epsilon)
@@ -51,7 +52,7 @@ class MpiAdam(object):
     def check_synced(self):
         if self.comm is None:
             return
-        if self.comm.Get_rank() == 0: # this is root
+        if self.comm.Get_rank() == 0:  # this is root
             theta = self.getflat()
             self.comm.Bcast(theta, root=0)
         else:
@@ -60,40 +61,39 @@ class MpiAdam(object):
             self.comm.Bcast(thetaroot, root=0)
             assert (thetaroot == thetalocal).all(), (thetaroot, thetalocal)
 
+
 @U.in_session
 def test_MpiAdam():
     np.random.seed(0)
-    tf.set_random_seed(0)
+    tf.compat.v1.set_random_seed(0)
 
     a = tf.Variable(np.random.randn(3).astype('float32'))
-    b = tf.Variable(np.random.randn(2,5).astype('float32'))
+    b = tf.Variable(np.random.randn(2, 5).astype('float32'))
     loss = tf.reduce_sum(tf.square(a)) + tf.reduce_sum(tf.sin(b))
 
     stepsize = 1e-2
-    update_op = tf.train.AdamOptimizer(stepsize).minimize(loss)
+    update_op = tf.compat.v1.train.AdamOptimizer(stepsize).minimize(loss)
     do_update = U.function([], loss, updates=[update_op])
 
-    tf.get_default_session().run(tf.global_variables_initializer())
+    tf.compat.v1.get_default_session().run(tf.compat.v1.global_variables_initializer())
     losslist_ref = []
     for i in range(10):
         l = do_update()
         print(i, l)
         losslist_ref.append(l)
 
+    tf.compat.v1.set_random_seed(0)
+    tf.compat.v1.get_default_session().run(tf.compat.v1.global_variables_initializer())
 
-
-    tf.set_random_seed(0)
-    tf.get_default_session().run(tf.global_variables_initializer())
-
-    var_list = [a,b]
+    var_list = [a, b]
     lossandgrad = U.function([], [loss, U.flatgrad(loss, var_list)])
     adam = MpiAdam(var_list)
 
     losslist_test = []
     for i in range(10):
-        l,g = lossandgrad()
+        l, g = lossandgrad()
         adam.update(g, stepsize)
-        print(i,l)
+        print(i, l)
         losslist_test.append(l)
 
     np.testing.assert_allclose(np.array(losslist_ref), np.array(losslist_test), atol=1e-4)

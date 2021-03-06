@@ -9,8 +9,8 @@ from baselines.common.tf_util import (
 
 def test_function():
     with tf.Graph().as_default():
-        x = tf.placeholder(tf.int32, (), name="x")
-        y = tf.placeholder(tf.int32, (), name="y")
+        x = tf.compat.v1.placeholder(tf.int32, (), name="x")
+        y = tf.compat.v1.placeholder(tf.int32, (), name="y")
         z = 3 * x + 2 * y
         lin = function([x, y], z, givens={y: 0})
 
@@ -25,9 +25,9 @@ def test_function():
 
 def test_multikwargs():
     with tf.Graph().as_default():
-        x = tf.placeholder(tf.int32, (), name="x")
-        with tf.variable_scope("other"):
-            x2 = tf.placeholder(tf.int32, (), name="x")
+        x = tf.compat.v1.placeholder(tf.int32, (), name="x")
+        with tf.compat.v1.variable_scope("other"):
+            x2 = tf.compat.v1.placeholder(tf.int32, (), name="x")
         z = 3 * x + 2 * x2
 
         lin = function([x, x2], z, givens={x2: 0})

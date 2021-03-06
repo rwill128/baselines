@@ -14,9 +14,8 @@ class FixedSequenceEnv(Env):
         self.np_random = np.random.RandomState(0)
         self.episode_len = episode_len
         self.sequence = [self.np_random.randint(0, self.action_space.n)
-            for _ in range(self.episode_len)]
+                         for _ in range(self.episode_len)]
         self.time = 0
-
 
     def reset(self):
         self.time = 0
@@ -39,5 +38,3 @@ class FixedSequenceEnv(Env):
 
     def _get_reward(self, actions):
         return 1 if actions == self.sequence[self.time] else 0
-
-

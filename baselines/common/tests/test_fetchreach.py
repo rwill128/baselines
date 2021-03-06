@@ -16,6 +16,7 @@ learn_kwargs = {
     'her': dict(total_timesteps=2000)
 }
 
+
 @mark_slow
 @pytest.mark.parametrize("alg", learn_kwargs.keys())
 def test_fetchreach(alg):
@@ -28,13 +29,14 @@ def test_fetchreach(alg):
     kwargs.update(learn_kwargs[alg])
 
     learn_fn = lambda e: get_learn_function(alg)(env=e, **kwargs)
-    def env_fn():
 
+    def env_fn():
         env = gym.make('FetchReach-v1')
         env.seed(0)
         return env
 
     reward_per_episode_test(env_fn, learn_fn, -15)
+
 
 if __name__ == '__main__':
     test_fetchreach('her')

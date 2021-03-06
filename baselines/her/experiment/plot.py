@@ -4,7 +4,9 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import json
-import seaborn as sns; sns.set()
+import seaborn as sns;
+
+sns.set()
 import glob2
 import argparse
 
@@ -14,7 +16,7 @@ def smooth_reward_curve(x, y):
     k = halfwidth
     xsmoo = x
     ysmoo = np.convolve(y, np.ones(2 * k + 1), mode='same') / np.convolve(np.ones_like(y), np.ones(2 * k + 1),
-        mode='same')
+                                                                          mode='same')
     return xsmoo, ysmoo
 
 

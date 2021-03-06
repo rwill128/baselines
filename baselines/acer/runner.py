@@ -8,20 +8,20 @@ class Runner(AbstractEnvRunner):
 
     def __init__(self, env, model, nsteps):
         super().__init__(env=env, model=model, nsteps=nsteps)
-        assert isinstance(env.action_space, spaces.Discrete), 'This ACER implementation works only with discrete action spaces!'
+        assert isinstance(env.action_space,
+                          spaces.Discrete), 'This ACER implementation works only with discrete action spaces!'
         assert isinstance(env, VecFrameStack)
 
         self.nact = env.action_space.n
         nenv = self.nenv
         self.nbatch = nenv * nsteps
-        self.batch_ob_shape = (nenv*(nsteps+1),) + env.observation_space.shape
+        self.batch_ob_shape = (nenv * (nsteps + 1),) + env.observation_space.shape
 
         self.obs = env.reset()
         self.obs_dtype = env.observation_space.dtype
         self.ac_dtype = env.action_space.dtype
         self.nstack = self.env.nstack
         self.nc = self.batch_ob_shape[-1] // self.nstack
-
 
     def run(self):
         # enc_obs = np.split(self.obs, self.nstack, axis=3)  # so now list of obs steps
@@ -51,11 +51,10 @@ class Runner(AbstractEnvRunner):
 
         mb_dones = np.asarray(mb_dones, dtype=np.bool).swapaxes(1, 0)
 
-        mb_masks = mb_dones # Used for statefull models like LSTM's to mask state when done
-        mb_dones = mb_dones[:, 1:] # Used for calculating returns. The dones array is now aligned with rewards
+        mb_masks = mb_dones  # Used for statefull models like LSTM's to mask state when done
+        mb_dones = mb_dones[:, 1:]  # Used for calculating returns. The dones array is now aligned with rewards
 
         # shapes are now [nenv, nsteps, []]
         # When pulling from buffer, arrays will now be reshaped in place, preventing a deep copy.
 
         return enc_obs, mb_obs, mb_actions, mb_rewards, mb_mus, mb_dones, mb_masks
-

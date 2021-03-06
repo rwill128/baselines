@@ -22,8 +22,9 @@ def sync_from_root(sess, variables, comm=None):
     if comm is None: comm = MPI.COMM_WORLD
     import tensorflow as tf
     values = comm.bcast(sess.run(variables))
-    sess.run([tf.assign(var, val)
-        for (var, val) in zip(variables, values)])
+    sess.run([tf.compat.v1.assign(var, val)
+              for (var, val) in zip(variables, values)])
+
 
 def gpu_count():
     """
@@ -34,17 +35,19 @@ def gpu_count():
     output = subprocess.check_output(['nvidia-smi', '--query-gpu=gpu_name', '--format=csv'])
     return max(0, len(output.split(b'\n')) - 2)
 
+
 def setup_mpi_gpus():
     """
     Set CUDA_VISIBLE_DEVICES to MPI rank if not already set
     """
     if 'CUDA_VISIBLE_DEVICES' not in os.environ:
-        if sys.platform == 'darwin': # This Assumes if you're on OSX you're just
-            ids = []                 # doing a smoke test and don't want GPUs
+        if sys.platform == 'darwin':  # This Assumes if you're on OSX you're just
+            ids = []  # doing a smoke test and don't want GPUs
         else:
             lrank, _lsize = get_local_rank_size(MPI.COMM_WORLD)
             ids = [lrank]
         os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, ids))
+
 
 def get_local_rank_size(comm):
     """
@@ -66,6 +69,7 @@ def get_local_rank_size(comm):
     assert local_rank is not None
     return local_rank, node2rankssofar[this_node]
 
+
 def share_file(comm, path):
     """
     Copies the file from rank 0 to all other ranks
@@ -84,6 +88,7 @@ def share_file(comm, path):
                 fh.write(data)
     comm.Barrier()
 
+
 def dict_gather(comm, d, op='mean', assert_all_have_data=True):
     """
     Perform a reduction operation over dicts
@@ -93,19 +98,20 @@ def dict_gather(comm, d, op='mean', assert_all_have_data=True):
     size = comm.size
     k2li = defaultdict(list)
     for d in alldicts:
-        for (k,v) in d.items():
+        for (k, v) in d.items():
             k2li[k].append(v)
     result = {}
-    for (k,li) in k2li.items():
+    for (k, li) in k2li.items():
         if assert_all_have_data:
-            assert len(li)==size, "only %i out of %i MPI workers have sent '%s'" % (len(li), size, k)
-        if op=='mean':
+            assert len(li) == size, "only %i out of %i MPI workers have sent '%s'" % (len(li), size, k)
+        if op == 'mean':
             result[k] = np.mean(li, axis=0)
-        elif op=='sum':
+        elif op == 'sum':
             result[k] = np.sum(li, axis=0)
         else:
             assert 0, op
     return result
+
 
 def mpi_weighted_mean(comm, local_name2valcount):
     """
@@ -127,7 +133,6 @@ def mpi_weighted_mean(comm, local_name2valcount):
                 else:
                     name2sum[name] += val * count
                     name2count[name] += count
-        return {name : name2sum[name] / name2count[name] for name in name2sum}
+        return {name: name2sum[name] / name2count[name] for name in name2sum}
     else:
         return {}
-

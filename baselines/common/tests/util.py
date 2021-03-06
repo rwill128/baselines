@@ -5,11 +5,12 @@ from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 N_TRIALS = 10000
 N_EPISODES = 100
 
-_sess_config = tf.ConfigProto(
+_sess_config = tf.compat.v1.ConfigProto(
     allow_soft_placement=True,
     intra_op_parallelism_threads=1,
     inter_op_parallelism_threads=1
 )
+
 
 def simple_test(env_fn, learn_fn, min_reward_fraction, n_trials=N_TRIALS):
     def seeded_env_fn():
@@ -19,8 +20,8 @@ def simple_test(env_fn, learn_fn, min_reward_fraction, n_trials=N_TRIALS):
 
     np.random.seed(0)
     env = DummyVecEnv([seeded_env_fn])
-    with tf.Graph().as_default(), tf.Session(config=_sess_config).as_default():
-        tf.set_random_seed(0)
+    with tf.Graph().as_default(), tf.compat.v1.Session(config=_sess_config).as_default():
+        tf.compat.v1.set_random_seed(0)
         model = learn_fn(env)
         sum_rew = 0
         done = True
@@ -36,11 +37,13 @@ def simple_test(env_fn, learn_fn, min_reward_fraction, n_trials=N_TRIALS):
             sum_rew += float(rew)
         print("Reward in {} trials is {}".format(n_trials, sum_rew))
         assert sum_rew > min_reward_fraction * n_trials, \
-            'sum of rewards {} is less than {} of the total number of trials {}'.format(sum_rew, min_reward_fraction, n_trials)
+            'sum of rewards {} is less than {} of the total number of trials {}'.format(sum_rew, min_reward_fraction,
+                                                                                        n_trials)
+
 
 def reward_per_episode_test(env_fn, learn_fn, min_avg_reward, n_trials=N_EPISODES):
     env = DummyVecEnv([env_fn])
-    with tf.Graph().as_default(), tf.Session(config=_sess_config).as_default():
+    with tf.Graph().as_default(), tf.compat.v1.Session(config=_sess_config).as_default():
         model = learn_fn(env)
         N_TRIALS = 100
         observations, actions, rewards = rollout(env, model, N_TRIALS)
@@ -49,6 +52,7 @@ def reward_per_episode_test(env_fn, learn_fn, min_avg_reward, n_trials=N_EPISODE
         print("Average reward in {} episodes is {}".format(n_trials, avg_rew))
         assert avg_rew > min_avg_reward, \
             'average reward in {} episodes ({}) is less than {}'.format(n_trials, avg_rew, min_avg_reward)
+
 
 def rollout(env, model, n_trials):
     rewards = []
@@ -64,7 +68,7 @@ def rollout(env, model, n_trials):
             if state is not None:
                 a, v, state, _ = model.step(obs, S=state, M=[False])
             else:
-                a,v, _, _ = model.step(obs)
+                a, v, _, _ = model.step(obs)
 
             obs, rew, done, _ = env.step(a)
             episode_rew.append(rew)
@@ -82,7 +86,7 @@ def smoketest(argstr, **kwargs):
     import tempfile
     import subprocess
     import os
-    argstr = 'python -m baselines.run ' + argstr
+    argstr = 'python3 -m baselines.run ' + argstr
     for key, value in kwargs:
         argstr += ' --{}={}'.format(key, value)
     tempdir = tempfile.mkdtemp()

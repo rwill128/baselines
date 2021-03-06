@@ -6,13 +6,16 @@ from baselines import logger
 
 import gym
 
+
 def train(num_timesteps, seed, model_path=None):
     env_id = 'Humanoid-v2'
     from baselines.ppo1 import mlp_policy, pposgd_simple
     U.make_session(num_cpu=1).__enter__()
+
     def policy_fn(name, ob_space, ac_space):
         return mlp_policy.MlpPolicy(name=name, ob_space=ob_space, ac_space=ac_space,
-            hid_size=64, num_hid_layers=2)
+                                    hid_size=64, num_hid_layers=2)
+
     env = make_mujoco_env(env_id, seed)
 
     # parameters below were the best found in a simple random search
@@ -21,28 +24,31 @@ def train(num_timesteps, seed, model_path=None):
     env = RewScale(env, 0.1)
     logger.log("NOTE: reward will be scaled by a factor of 10  in logged stats. Check the monitor for unscaled reward.")
     pi = pposgd_simple.learn(env, policy_fn,
-            max_timesteps=num_timesteps,
-            timesteps_per_actorbatch=2048,
-            clip_param=0.1, entcoeff=0.0,
-            optim_epochs=10,
-            optim_stepsize=1e-4,
-            optim_batchsize=64,
-            gamma=0.99,
-            lam=0.95,
-            schedule='constant',
-        )
+                             max_timesteps=num_timesteps,
+                             timesteps_per_actorbatch=2048,
+                             clip_param=0.1, entcoeff=0.0,
+                             optim_epochs=10,
+                             optim_stepsize=1e-4,
+                             optim_batchsize=64,
+                             gamma=0.99,
+                             lam=0.95,
+                             schedule='constant',
+                             )
     env.close()
     if model_path:
         U.save_state(model_path)
 
     return pi
 
+
 class RewScale(gym.RewardWrapper):
     def __init__(self, env, scale):
         gym.RewardWrapper.__init__(self, env)
         self.scale = scale
+
     def reward(self, r):
         return r * self.scale
+
 
 def main():
     logger.configure()
@@ -64,10 +70,11 @@ def main():
         ob = env.reset()
         while True:
             action = pi.act(stochastic=False, ob=ob)[0]
-            ob, _, done, _ =  env.step(action)
+            ob, _, done, _ = env.step(action)
             env.render()
             if done:
                 ob = env.reset()
+
 
 if __name__ == '__main__':
     main()

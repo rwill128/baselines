@@ -4,6 +4,7 @@ import numpy as np
 import time
 from collections import deque
 
+
 class VecMonitor(VecEnvWrapper):
     def __init__(self, venv, filename=None, keep_buf=0, info_keywords=()):
         VecEnvWrapper.__init__(self, venv)
@@ -13,7 +14,7 @@ class VecMonitor(VecEnvWrapper):
         self.tstart = time.time()
         if filename:
             self.results_writer = ResultsWriter(filename, header={'t_start': self.tstart},
-                extra_keys=info_keywords)
+                                                extra_keys=info_keywords)
         else:
             self.results_writer = None
         self.info_keywords = info_keywords

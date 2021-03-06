@@ -17,7 +17,8 @@ def dims_to_shapes(input_dims):
     return {key: tuple([val]) if val > 0 else tuple() for key, val in input_dims.items()}
 
 
-global DEMO_BUFFER #buffer for demonstrations
+global DEMO_BUFFER  # buffer for demonstrations
+
 
 class DDPG(object):
     @store_args
@@ -84,18 +85,18 @@ class DDPG(object):
         self.stage_shapes = stage_shapes
 
         # Create network.
-        with tf.variable_scope(self.scope):
+        with tf.compat.v1.variable_scope(self.scope):
             self.staging_tf = StagingArea(
                 dtypes=[tf.float32 for _ in self.stage_shapes.keys()],
                 shapes=list(self.stage_shapes.values()))
             self.buffer_ph_tf = [
-                tf.placeholder(tf.float32, shape=shape) for shape in self.stage_shapes.values()]
+                tf.compat.v1.placeholder(tf.float32, shape=shape) for shape in self.stage_shapes.values()]
             self.stage_op = self.staging_tf.put(self.buffer_ph_tf)
 
             self._create_network(reuse=reuse)
 
         # Configure the replay buffer.
-        buffer_shapes = {key: (self.T-1 if key != 'o' else self.T, *input_shapes[key])
+        buffer_shapes = {key: (self.T - 1 if key != 'o' else self.T, *input_shapes[key])
                          for key, val in input_shapes.items()}
         buffer_shapes['g'] = (buffer_shapes['g'][0], self.dimg)
         buffer_shapes['ag'] = (self.T, self.dimg)
@@ -104,7 +105,8 @@ class DDPG(object):
         self.buffer = ReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions)
 
         global DEMO_BUFFER
-        DEMO_BUFFER = ReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions) #initialize the demo buffer; in the same way as the primary data buffer
+        DEMO_BUFFER = ReplayBuffer(buffer_shapes, buffer_size, self.T,
+                                   self.sample_transitions)  # initialize the demo buffer; in the same way as the primary data buffer
 
     def _random_action(self, n):
         return np.random.uniform(low=-self.max_u, high=self.max_u, size=(n, self.dimu))
@@ -123,7 +125,6 @@ class DDPG(object):
     def step(self, obs):
         actions = self.get_actions(obs['observation'], obs['achieved_goal'], obs['desired_goal'])
         return actions, None, None, None
-
 
     def get_actions(self, o, ag, g, noise_eps=0., random_eps=0., use_target_net=False,
                     compute_Q=False):
@@ -146,7 +147,8 @@ class DDPG(object):
         noise = noise_eps * self.max_u * np.random.randn(*u.shape)  # gaussian noise
         u += noise
         u = np.clip(u, -self.max_u, self.max_u)
-        u += np.random.binomial(1, random_eps, u.shape[0]).reshape(-1, 1) * (self._random_action(u.shape[0]) - u)  # eps-greedy
+        u += np.random.binomial(1, random_eps, u.shape[0]).reshape(-1, 1) * (
+                    self._random_action(u.shape[0]) - u)  # eps-greedy
         if u.shape[0] == 1:
             u = u[0]
         u = u.copy()
@@ -157,9 +159,9 @@ class DDPG(object):
         else:
             return ret
 
-    def init_demo_buffer(self, demoDataFile, update_stats=True): #function that initializes the demo buffer
+    def init_demo_buffer(self, demoDataFile, update_stats=True):  # function that initializes the demo buffer
 
-        demoData = np.load(demoDataFile) #load the demonstration data from data file
+        demoData = np.load(demoDataFile)  # load the demonstration data from data file
         info_keys = [key.replace('info_', '') for key in self.input_dims.keys() if key.startswith('info_')]
         info_values = [np.empty((self.T - 1, 1, self.input_dims['info_' + key]), np.float32) for key in info_keys]
 
@@ -167,8 +169,8 @@ class DDPG(object):
         demo_data_acs = demoData['acs']
         demo_data_info = demoData['info']
 
-        for epsd in range(self.num_demo): # we initialize the whole demo buffer at the start of the training
-            obs, acts, goals, achieved_goals = [], [] ,[] ,[]
+        for epsd in range(self.num_demo):  # we initialize the whole demo buffer at the start of the training
+            obs, acts, goals, achieved_goals = [], [], [], []
             i = 0
             for transition in range(self.T - 1):
                 obs.append([demo_data_obs[epsd][transition].get('observation')])
@@ -177,7 +179,6 @@ class DDPG(object):
                 achieved_goals.append([demo_data_obs[epsd][transition].get('achieved_goal')])
                 for idx, key in enumerate(info_keys):
                     info_values[idx][transition, i] = demo_data_info[epsd][transition][key]
-
 
             obs.append([demo_data_obs[epsd][self.T - 1].get('observation')])
             achieved_goals.append([demo_data_obs[epsd][self.T - 1].get('achieved_goal')])
@@ -191,8 +192,10 @@ class DDPG(object):
 
             episode = convert_episode_to_batch_major(episode)
             global DEMO_BUFFER
-            DEMO_BUFFER.store_episode(episode) # create the observation dict and append them into the demonstration buffer
-            logger.debug("Demo buffer size currently ", DEMO_BUFFER.get_current_size()) #print out the demonstration buffer size
+            DEMO_BUFFER.store_episode(
+                episode)  # create the observation dict and append them into the demonstration buffer
+            logger.debug("Demo buffer size currently ",
+                         DEMO_BUFFER.get_current_size())  # print out the demonstration buffer size
 
             if update_stats:
                 # add transitions to normalizer to normalize the demo data as well
@@ -212,7 +215,7 @@ class DDPG(object):
                 self.g_stats.recompute_stats()
             episode.clear()
 
-        logger.info("Demo buffer size: ", DEMO_BUFFER.get_current_size()) #print out the demonstration buffer size
+        logger.info("Demo buffer size: ", DEMO_BUFFER.get_current_size())  # print out the demonstration buffer size
 
     def store_episode(self, episode_batch, update_stats=True):
         """
@@ -261,17 +264,17 @@ class DDPG(object):
         self.pi_adam.update(pi_grad, self.pi_lr)
 
     def sample_batch(self):
-        if self.bc_loss: #use demonstration buffer to sample as well if bc_loss flag is set TRUE
+        if self.bc_loss:  # use demonstration buffer to sample as well if bc_loss flag is set TRUE
             transitions = self.buffer.sample(self.batch_size - self.demo_batch_size)
             global DEMO_BUFFER
-            transitions_demo = DEMO_BUFFER.sample(self.demo_batch_size) #sample from the demo buffer
+            transitions_demo = DEMO_BUFFER.sample(self.demo_batch_size)  # sample from the demo buffer
             for k, values in transitions_demo.items():
                 rolloutV = transitions[k].tolist()
                 for v in values:
                     rolloutV.append(v.tolist())
                 transitions[k] = np.array(rolloutV)
         else:
-            transitions = self.buffer.sample(self.batch_size) #otherwise only sample from primary buffer
+            transitions = self.buffer.sample(self.batch_size)  # otherwise only sample from primary buffer
 
         o, o_2, g = transitions['o'], transitions['o_2'], transitions['g']
         ag, ag_2 = transitions['ag'], transitions['ag_2']
@@ -304,12 +307,12 @@ class DDPG(object):
         self.buffer.clear_buffer()
 
     def _vars(self, scope):
-        res = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.scope + '/' + scope)
+        res = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES, scope=self.scope + '/' + scope)
         assert len(res) > 0
         return res
 
     def _global_vars(self, scope):
-        res = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.scope + '/' + scope)
+        res = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope=self.scope + '/' + scope)
         return res
 
     def _create_network(self, reuse=False):
@@ -317,11 +320,11 @@ class DDPG(object):
         self.sess = tf_util.get_session()
 
         # running averages
-        with tf.variable_scope('o_stats') as vs:
+        with tf.compat.v1.variable_scope('o_stats') as vs:
             if reuse:
                 vs.reuse_variables()
             self.o_stats = Normalizer(self.dimo, self.norm_eps, self.norm_clip, sess=self.sess)
-        with tf.variable_scope('g_stats') as vs:
+        with tf.compat.v1.variable_scope('g_stats') as vs:
             if reuse:
                 vs.reuse_variables()
             self.g_stats = Normalizer(self.dimg, self.norm_eps, self.norm_clip, sess=self.sess)
@@ -332,16 +335,16 @@ class DDPG(object):
                                 for i, key in enumerate(self.stage_shapes.keys())])
         batch_tf['r'] = tf.reshape(batch_tf['r'], [-1, 1])
 
-        #choose only the demo buffer samples
-        mask = np.concatenate((np.zeros(self.batch_size - self.demo_batch_size), np.ones(self.demo_batch_size)), axis = 0)
+        # choose only the demo buffer samples
+        mask = np.concatenate((np.zeros(self.batch_size - self.demo_batch_size), np.ones(self.demo_batch_size)), axis=0)
 
         # networks
-        with tf.variable_scope('main') as vs:
+        with tf.compat.v1.variable_scope('main') as vs:
             if reuse:
                 vs.reuse_variables()
             self.main = self.create_actor_critic(batch_tf, net_type='main', **self.__dict__)
             vs.reuse_variables()
-        with tf.variable_scope('target') as vs:
+        with tf.compat.v1.variable_scope('target') as vs:
             if reuse:
                 vs.reuse_variables()
             target_batch_tf = batch_tf.copy()
@@ -358,21 +361,28 @@ class DDPG(object):
         target_tf = tf.clip_by_value(batch_tf['r'] + self.gamma * target_Q_pi_tf, *clip_range)
         self.Q_loss_tf = tf.reduce_mean(tf.square(tf.stop_gradient(target_tf) - self.main.Q_tf))
 
-        if self.bc_loss ==1 and self.q_filter == 1 : # train with demonstrations and use bc_loss and q_filter both
-            maskMain = tf.reshape(tf.boolean_mask(self.main.Q_tf > self.main.Q_pi_tf, mask), [-1]) #where is the demonstrator action better than actor action according to the critic? choose those samples only
-            #define the cloning loss on the actor's actions only on the samples which adhere to the above masks
-            self.cloning_loss_tf = tf.reduce_sum(tf.square(tf.boolean_mask(tf.boolean_mask((self.main.pi_tf), mask), maskMain, axis=0) - tf.boolean_mask(tf.boolean_mask((batch_tf['u']), mask), maskMain, axis=0)))
-            self.pi_loss_tf = -self.prm_loss_weight * tf.reduce_mean(self.main.Q_pi_tf) #primary loss scaled by it's respective weight prm_loss_weight
-            self.pi_loss_tf += self.prm_loss_weight * self.action_l2 * tf.reduce_mean(tf.square(self.main.pi_tf / self.max_u)) #L2 loss on action values scaled by the same weight prm_loss_weight
-            self.pi_loss_tf += self.aux_loss_weight * self.cloning_loss_tf #adding the cloning loss to the actor loss as an auxilliary loss scaled by its weight aux_loss_weight
+        if self.bc_loss == 1 and self.q_filter == 1:  # train with demonstrations and use bc_loss and q_filter both
+            maskMain = tf.reshape(tf.boolean_mask(self.main.Q_tf > self.main.Q_pi_tf, mask), [
+                -1])  # where is the demonstrator action better than actor action according to the critic? choose those samples only
+            # define the cloning loss on the actor's actions only on the samples which adhere to the above masks
+            self.cloning_loss_tf = tf.reduce_sum(tf.square(
+                tf.boolean_mask(tf.boolean_mask((self.main.pi_tf), mask), maskMain, axis=0) - tf.boolean_mask(
+                    tf.boolean_mask((batch_tf['u']), mask), maskMain, axis=0)))
+            self.pi_loss_tf = -self.prm_loss_weight * tf.reduce_mean(
+                self.main.Q_pi_tf)  # primary loss scaled by it's respective weight prm_loss_weight
+            self.pi_loss_tf += self.prm_loss_weight * self.action_l2 * tf.reduce_mean(tf.square(
+                self.main.pi_tf / self.max_u))  # L2 loss on action values scaled by the same weight prm_loss_weight
+            self.pi_loss_tf += self.aux_loss_weight * self.cloning_loss_tf  # adding the cloning loss to the actor loss as an auxilliary loss scaled by its weight aux_loss_weight
 
-        elif self.bc_loss == 1 and self.q_filter == 0: # train with demonstrations without q_filter
-            self.cloning_loss_tf = tf.reduce_sum(tf.square(tf.boolean_mask((self.main.pi_tf), mask) - tf.boolean_mask((batch_tf['u']), mask)))
+        elif self.bc_loss == 1 and self.q_filter == 0:  # train with demonstrations without q_filter
+            self.cloning_loss_tf = tf.reduce_sum(
+                tf.square(tf.boolean_mask((self.main.pi_tf), mask) - tf.boolean_mask((batch_tf['u']), mask)))
             self.pi_loss_tf = -self.prm_loss_weight * tf.reduce_mean(self.main.Q_pi_tf)
-            self.pi_loss_tf += self.prm_loss_weight * self.action_l2 * tf.reduce_mean(tf.square(self.main.pi_tf / self.max_u))
+            self.pi_loss_tf += self.prm_loss_weight * self.action_l2 * tf.reduce_mean(
+                tf.square(self.main.pi_tf / self.max_u))
             self.pi_loss_tf += self.aux_loss_weight * self.cloning_loss_tf
 
-        else: #If  not training with demonstrations
+        else:  # If  not training with demonstrations
             self.pi_loss_tf = -tf.reduce_mean(self.main.Q_pi_tf)
             self.pi_loss_tf += self.action_l2 * tf.reduce_mean(tf.square(self.main.pi_tf / self.max_u))
 
@@ -396,10 +406,11 @@ class DDPG(object):
         self.init_target_net_op = list(
             map(lambda v: v[0].assign(v[1]), zip(self.target_vars, self.main_vars)))
         self.update_target_net_op = list(
-            map(lambda v: v[0].assign(self.polyak * v[0] + (1. - self.polyak) * v[1]), zip(self.target_vars, self.main_vars)))
+            map(lambda v: v[0].assign(self.polyak * v[0] + (1. - self.polyak) * v[1]),
+                zip(self.target_vars, self.main_vars)))
 
         # initialize all variables
-        tf.variables_initializer(self._global_vars('')).run()
+        tf.compat.v1.variables_initializer(self._global_vars('')).run()
         self._sync_optimizers()
         self._init_target_net()
 
@@ -439,10 +450,9 @@ class DDPG(object):
                 self.__dict__[k] = v
         # load TF variables
         vars = [x for x in self._global_vars('') if 'buffer' not in x.name]
-        assert(len(vars) == len(state["tf"]))
-        node = [tf.assign(var, val) for var, val in zip(vars, state["tf"])]
+        assert (len(vars) == len(state["tf"]))
+        node = [tf.compat.v1.assign(var, val) for var, val in zip(vars, state["tf"])]
         self.sess.run(node)
 
     def save(self, save_path):
         tf_util.save_variables(save_path)
-

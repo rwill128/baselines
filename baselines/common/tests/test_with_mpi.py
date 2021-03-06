@@ -11,13 +11,14 @@ try:
 except ImportError:
     MPI = None
 
+
 def with_mpi(nproc=2, timeout=30, skip_if_no_mpi=True):
     def outer_thunk(fn):
         @wraps(fn)
         def thunk(*args, **kwargs):
             serialized_fn = base64.b64encode(cloudpickle.dumps(lambda: fn(*args, **kwargs)))
             subprocess.check_call([
-                'mpiexec','-n', str(nproc),
+                'mpiexec', '-n', str(nproc),
                 sys.executable,
                 '-m', 'baselines.common.tests.test_with_mpi',
                 serialized_fn

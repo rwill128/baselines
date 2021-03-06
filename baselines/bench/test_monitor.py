@@ -2,6 +2,7 @@ from .monitor import Monitor
 import gym
 import json
 
+
 def test_monitor():
     import pandas
     import os
@@ -23,7 +24,7 @@ def test_monitor():
     assert firstline.startswith('#')
     metadata = json.loads(firstline[1:])
     assert metadata['env_id'] == "CartPole-v1"
-    assert set(metadata.keys()) == {'env_id', 't_start'},  "Incorrect keys in monitor metadata"
+    assert set(metadata.keys()) == {'env_id', 't_start'}, "Incorrect keys in monitor metadata"
 
     last_logline = pandas.read_csv(f, index_col=None)
     assert set(last_logline.keys()) == {'l', 't', 'r'}, "Incorrect keys in monitor logline"

@@ -43,8 +43,7 @@ def learn(env, policy_func, dataset, optim_batch_size=128, max_iters=1e4,
           adam_epsilon=1e-5, optim_stepsize=3e-4,
           ckpt_dir=None, log_dir=None, task_name=None,
           verbose=False):
-
-    val_per_iter = int(max_iters/10)
+    val_per_iter = int(max_iters / 10)
     ob_space = env.observation_space
     ac_space = env.action_space
     pi = policy_func("pi", ob_space, ac_space)  # Construct network for new policy
@@ -52,10 +51,10 @@ def learn(env, policy_func, dataset, optim_batch_size=128, max_iters=1e4,
     ob = U.get_placeholder_cached(name="ob")
     ac = pi.pdtype.sample_placeholder([None])
     stochastic = U.get_placeholder_cached(name="stochastic")
-    loss = tf.reduce_mean(tf.square(ac-pi.ac))
+    loss = tf.reduce_mean(tf.square(ac - pi.ac))
     var_list = pi.get_trainable_variables()
     adam = MpiAdam(var_list, epsilon=adam_epsilon)
-    lossandgrad = U.function([ob, ac, stochastic], [loss]+[U.flatgrad(loss, var_list)])
+    lossandgrad = U.function([ob, ac, stochastic], [loss] + [U.flatgrad(loss, var_list)])
 
     U.initialize()
     adam.sync()
@@ -93,6 +92,7 @@ def main(args):
     def policy_fn(name, ob_space, ac_space, reuse=False):
         return mlp_policy.MlpPolicy(name=name, ob_space=ob_space, ac_space=ac_space,
                                     reuse=reuse, hid_size=args.policy_hidden_size, num_hid_layers=2)
+
     env = bench.Monitor(env, logger.get_dir() and
                         osp.join(logger.get_dir(), "monitor.json"))
     env.seed(args.seed)

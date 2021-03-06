@@ -63,7 +63,7 @@ def get_task_name(args):
         task_name += "transition_limitation_%d." % args.traj_limitation
     task_name += args.env_id.split("-")[0]
     task_name = task_name + ".g_step_" + str(args.g_step) + ".d_step_" + str(args.d_step) + \
-        ".policy_entcoeff_" + str(args.policy_entcoeff) + ".adversary_entcoeff_" + str(args.adversary_entcoeff)
+                ".policy_entcoeff_" + str(args.policy_entcoeff) + ".adversary_entcoeff_" + str(args.adversary_entcoeff)
     task_name += ".seed_" + str(args.seed)
     return task_name
 
@@ -76,6 +76,7 @@ def main(args):
     def policy_fn(name, ob_space, ac_space, reuse=False):
         return mlp_policy.MlpPolicy(name=name, ob_space=ob_space, ac_space=ac_space,
                                     reuse=reuse, hid_size=args.policy_hidden_size, num_hid_layers=2)
+
     env = bench.Monitor(env, logger.get_dir() and
                         osp.join(logger.get_dir(), "monitor.json"))
     env.seed(args.seed)
@@ -121,7 +122,6 @@ def main(args):
 def train(env, seed, policy_fn, reward_giver, dataset, algo,
           g_step, d_step, policy_entcoeff, num_timesteps, save_per_iter,
           checkpoint_dir, log_dir, pretrained, BC_max_iter, task_name=None):
-
     pretrained_weight = None
     if pretrained and (BC_max_iter > 0):
         # Pretrain with behavior cloning
@@ -156,7 +156,6 @@ def train(env, seed, policy_fn, reward_giver, dataset, algo,
 
 def runner(env, policy_func, load_model_path, timesteps_per_batch, number_trajs,
            stochastic_policy, save=False, reuse=False):
-
     # Setup network
     # ----------------------------------------
     ob_space = env.observation_space
@@ -186,8 +185,8 @@ def runner(env, policy_func, load_model_path, timesteps_per_batch, number_trajs,
         filename = load_model_path.split('/')[-1] + '.' + env.spec.id
         np.savez(filename, obs=np.array(obs_list), acs=np.array(acs_list),
                  lens=np.array(len_list), rets=np.array(ret_list))
-    avg_len = sum(len_list)/len(len_list)
-    avg_ret = sum(ret_list)/len(ret_list)
+    avg_len = sum(len_list) / len(len_list)
+    avg_ret = sum(ret_list) / len(ret_list)
     print("Average length:", avg_len)
     print("Average return:", avg_ret)
     return avg_len, avg_ret
@@ -195,7 +194,6 @@ def runner(env, policy_func, load_model_path, timesteps_per_batch, number_trajs,
 
 # Sample one trajectory (until trajectory end)
 def traj_1_generator(pi, env, horizon, stochastic):
-
     t = 0
     ac = env.action_space.sample()  # not used, just so we have the datatype
     new = True  # marks if we're on first timestep of an episode

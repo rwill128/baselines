@@ -4,6 +4,7 @@ from gym import Env
 from gym.spaces import MultiDiscrete, Discrete, Box
 from collections import deque
 
+
 class IdentityEnv(Env):
     def __init__(
             self,
@@ -17,7 +18,7 @@ class IdentityEnv(Env):
         self.time = 0
         self.delay = delay
         self.zero_first_rewards = zero_first_rewards
-        self.q = deque(maxlen=delay+1)
+        self.q = deque(maxlen=delay + 1)
 
     def reset(self):
         self.q.clear()
@@ -52,12 +53,12 @@ class DiscreteIdentityEnv(IdentityEnv):
             delay=0,
             zero_first_rewards=True
     ):
-
         self.action_space = Discrete(dim)
         super().__init__(episode_len=episode_len, delay=delay, zero_first_rewards=zero_first_rewards)
 
     def _get_reward(self, state, actions):
         return 1 if state == actions else 0
+
 
 class MultiDiscreteIdentityEnv(IdentityEnv):
     def __init__(
@@ -66,7 +67,6 @@ class MultiDiscreteIdentityEnv(IdentityEnv):
             episode_len=None,
             delay=0,
     ):
-
         self.action_space = MultiDiscrete(dims)
         super().__init__(episode_len=episode_len, delay=delay)
 
@@ -80,7 +80,6 @@ class BoxIdentityEnv(IdentityEnv):
             shape,
             episode_len=None,
     ):
-
         self.action_space = Box(low=-1.0, high=1.0, shape=shape, dtype=np.float32)
         super().__init__(episode_len=episode_len)
 

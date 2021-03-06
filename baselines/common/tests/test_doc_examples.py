@@ -1,6 +1,8 @@
 import pytest
+
 try:
     import mujoco_py
+
     _mujoco_present = True
 except BaseException:
     mujoco_py = None
@@ -19,12 +21,12 @@ def test_lstm_example():
     # create vectorized environment
     venv = DummyVecEnv([lambda: cmd_util.make_mujoco_env('Reacher-v2', seed=0)])
 
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         # build policy based on lstm network with 128 units
         policy = policies.build_policy(venv, models.lstm(128))(nbatch=1, nsteps=1)
 
         # initialize tensorflow variables
-        sess.run(tf.global_variables_initializer())
+        sess.run(tf.compat.v1.global_variables_initializer())
 
         # prepare environment variables
         ob = venv.reset()
@@ -40,9 +42,4 @@ def test_lstm_example():
             if done:
                 break
 
-
         assert step_counter > 5
-
-
-
-

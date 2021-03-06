@@ -2,6 +2,7 @@ import numpy as np
 from .vec_env import VecEnv
 from .util import copy_obs_dict, dict_to_obs, obs_space_info
 
+
 class DummyVecEnv(VecEnv):
     """
     VecEnv that does runs multiple environments sequentially, that is,
@@ -9,6 +10,7 @@ class DummyVecEnv(VecEnv):
     Useful when debugging and when num_env == 1 (in the latter case,
     avoids communication overhead)
     """
+
     def __init__(self, env_fns):
         """
         Arguments:
@@ -21,9 +23,9 @@ class DummyVecEnv(VecEnv):
         obs_space = env.observation_space
         self.keys, shapes, dtypes = obs_space_info(obs_space)
 
-        self.buf_obs = { k: np.zeros((self.num_envs,) + tuple(shapes[k]), dtype=dtypes[k]) for k in self.keys }
+        self.buf_obs = {k: np.zeros((self.num_envs,) + tuple(shapes[k]), dtype=dtypes[k]) for k in self.keys}
         self.buf_dones = np.zeros((self.num_envs,), dtype=np.bool)
-        self.buf_rews  = np.zeros((self.num_envs,), dtype=np.float32)
+        self.buf_rews = np.zeros((self.num_envs,), dtype=np.float32)
         self.buf_infos = [{} for _ in range(self.num_envs)]
         self.actions = None
         self.spec = self.envs[0].spec
@@ -39,7 +41,8 @@ class DummyVecEnv(VecEnv):
         if not listify:
             self.actions = actions
         else:
-            assert self.num_envs == 1, "actions {} is either not a list or has a wrong size - cannot match to {} environments".format(actions, self.num_envs)
+            assert self.num_envs == 1, "actions {} is either not a list or has a wrong size - cannot match to {} environments".format(
+                actions, self.num_envs)
             self.actions = [actions]
 
     def step_wait(self):

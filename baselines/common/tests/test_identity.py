@@ -12,7 +12,7 @@ common_kwargs = dict(
 )
 
 learn_kwargs = {
-    'a2c' : {},
+    'a2c': {},
     'acktr': {},
     'deepq': {},
     'ddpg': dict(layer_norm=True),
@@ -20,10 +20,10 @@ learn_kwargs = {
     'trpo_mpi': dict(timesteps_per_batch=100, cg_iters=10, gamma=0.9, lam=1.0, max_kl=0.01)
 }
 
-
 algos_disc = ['a2c', 'acktr', 'deepq', 'ppo2', 'trpo_mpi']
 algos_multidisc = ['a2c', 'acktr', 'ppo2', 'trpo_mpi']
-algos_cont = ['a2c', 'acktr', 'ddpg',  'ppo2', 'trpo_mpi']
+algos_cont = ['a2c', 'acktr', 'ddpg', 'ppo2', 'trpo_mpi']
+
 
 @mark_slow
 @pytest.mark.parametrize("alg", algos_disc)
@@ -40,6 +40,7 @@ def test_discrete_identity(alg):
     env_fn = lambda: DiscreteIdentityEnv(10, episode_len=100)
     simple_test(env_fn, learn_fn, 0.9)
 
+
 @mark_slow
 @pytest.mark.parametrize("alg", algos_multidisc)
 def test_multidiscrete_identity(alg):
@@ -52,8 +53,9 @@ def test_multidiscrete_identity(alg):
     kwargs.update(common_kwargs)
 
     learn_fn = lambda e: get_learn_function(alg)(env=e, **kwargs)
-    env_fn = lambda: MultiDiscreteIdentityEnv((3,3), episode_len=100)
+    env_fn = lambda: MultiDiscreteIdentityEnv((3, 3), episode_len=100)
     simple_test(env_fn, learn_fn, 0.9)
+
 
 @mark_slow
 @pytest.mark.parametrize("alg", algos_cont)
@@ -71,6 +73,6 @@ def test_continuous_identity(alg):
     env_fn = lambda: BoxIdentityEnv((1,), episode_len=100)
     simple_test(env_fn, learn_fn, -0.1)
 
+
 if __name__ == '__main__':
     test_multidiscrete_identity('acktr')
-

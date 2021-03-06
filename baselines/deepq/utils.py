@@ -1,6 +1,7 @@
 from baselines.common.input import observation_input
 from baselines.common.tf_util import adjust_shape
 
+
 # ================================================================
 # Placeholders
 # ================================================================
@@ -55,5 +56,3 @@ class ObservationInput(PlaceholderTfInput):
 
     def get(self):
         return self.processed_inpt
-
-

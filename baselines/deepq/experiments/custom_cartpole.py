@@ -2,7 +2,7 @@ import gym
 import itertools
 import numpy as np
 import tensorflow as tf
-import tensorflow.contrib.layers as layers
+from tensorflow.python.keras.legacy_tf_layers.core import fully_connected
 
 import baselines.common.tf_util as U
 
@@ -15,10 +15,10 @@ from baselines.common.schedules import LinearSchedule
 
 def model(inpt, num_actions, scope, reuse=False):
     """This model takes as input an observation and returns values of all actions."""
-    with tf.variable_scope(scope, reuse=reuse):
+    with tf.compat.v1.variable_scope(scope, reuse=reuse):
         out = inpt
-        out = layers.fully_connected(out, num_outputs=64, activation_fn=tf.nn.tanh)
-        out = layers.fully_connected(out, num_outputs=num_actions, activation_fn=None)
+        out = fully_connected(out, num_outputs=64, activation_fn=tf.nn.tanh)
+        out = fully_connected(out, num_outputs=num_actions, activation_fn=None)
         return out
 
 
@@ -31,7 +31,7 @@ if __name__ == '__main__':
             make_obs_ph=lambda name: ObservationInput(env.observation_space, name=name),
             q_func=model,
             num_actions=env.action_space.n,
-            optimizer=tf.train.AdamOptimizer(learning_rate=5e-4),
+            optimizer=tf.compat.v1.train.AdamOptimizer(learning_rate=5e-4),
         )
         # Create the replay buffer
         replay_buffer = ReplayBuffer(50000)

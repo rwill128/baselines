@@ -2,6 +2,7 @@ import numpy as np
 from baselines.a2c.utils import discount_with_dones
 from baselines.common.runners import AbstractEnvRunner
 
+
 class Runner(AbstractEnvRunner):
     """
     We use this class to generate batches of experiences
@@ -12,6 +13,7 @@ class Runner(AbstractEnvRunner):
     run():
     - Make a mini batch of experiences
     """
+
     def __init__(self, env, model, nsteps=5, gamma=0.99):
         super().__init__(env=env, model=model, nsteps=nsteps)
         self.gamma = gamma
@@ -20,7 +22,7 @@ class Runner(AbstractEnvRunner):
 
     def run(self):
         # We initialize the lists that will contain the mb of experiences
-        mb_obs, mb_rewards, mb_actions, mb_values, mb_dones = [],[],[],[],[]
+        mb_obs, mb_rewards, mb_actions, mb_values, mb_dones = [], [], [], [], []
         mb_states = self.states
         epinfos = []
         for n in range(self.nsteps):
@@ -54,7 +56,6 @@ class Runner(AbstractEnvRunner):
         mb_masks = mb_dones[:, :-1]
         mb_dones = mb_dones[:, 1:]
 
-
         if self.gamma > 0.0:
             # Discount/bootstrap off value fn
             last_values = self.model.value(self.obs, S=self.states, M=self.dones).tolist()
@@ -62,7 +63,7 @@ class Runner(AbstractEnvRunner):
                 rewards = rewards.tolist()
                 dones = dones.tolist()
                 if dones[-1] == 0:
-                    rewards = discount_with_dones(rewards+[value], dones+[0], self.gamma)[:-1]
+                    rewards = discount_with_dones(rewards + [value], dones + [0], self.gamma)[:-1]
                 else:
                     rewards = discount_with_dones(rewards, dones, self.gamma)
 

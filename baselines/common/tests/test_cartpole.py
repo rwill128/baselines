@@ -13,7 +13,7 @@ common_kwargs = dict(
 )
 
 learn_kwargs = {
-    'a2c' : dict(nsteps=32, value_network='copy', lr=0.05),
+    'a2c': dict(nsteps=32, value_network='copy', lr=0.05),
     'acer': dict(value_network='copy'),
     'acktr': dict(nsteps=32, value_network='copy', is_async=False),
     'deepq': dict(total_timesteps=20000),
@@ -21,7 +21,7 @@ learn_kwargs = {
     'trpo_mpi': {}
 }
 
-@mark_slow
+
 @pytest.mark.parametrize("alg", learn_kwargs.keys())
 def test_cartpole(alg):
     '''
@@ -33,13 +33,14 @@ def test_cartpole(alg):
     kwargs.update(learn_kwargs[alg])
 
     learn_fn = lambda e: get_learn_function(alg)(env=e, **kwargs)
-    def env_fn():
 
+    def env_fn():
         env = gym.make('CartPole-v0')
         env.seed(0)
         return env
 
     reward_per_episode_test(env_fn, learn_fn, 100)
+
 
 if __name__ == '__main__':
     test_cartpole('acer')

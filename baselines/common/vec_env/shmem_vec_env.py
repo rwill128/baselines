@@ -49,7 +49,8 @@ class ShmemVecEnv(VecEnv):
                 wrapped_fn = CloudpickleWrapper(env_fn)
                 parent_pipe, child_pipe = ctx.Pipe()
                 proc = ctx.Process(target=_subproc_worker,
-                            args=(child_pipe, parent_pipe, wrapped_fn, obs_buf, self.obs_shapes, self.obs_dtypes, self.obs_keys))
+                                   args=(child_pipe, parent_pipe, wrapped_fn, obs_buf, self.obs_shapes, self.obs_dtypes,
+                                         self.obs_keys))
                 proc.daemon = True
                 self.procs.append(proc)
                 self.parent_pipes.append(parent_pipe)
@@ -97,7 +98,6 @@ class ShmemVecEnv(VecEnv):
     def _decode_obses(self, obs):
         result = {}
         for k in self.obs_keys:
-
             bufs = [b[k] for b in self.obs_bufs]
             o = [np.frombuffer(b.get_obj(), dtype=self.obs_dtypes[k]).reshape(self.obs_shapes[k]) for b in bufs]
             result[k] = np.array(o)
@@ -109,6 +109,7 @@ def _subproc_worker(pipe, parent_pipe, env_fn_wrapper, obs_bufs, obs_shapes, obs
     Control a single environment instance using IPC and
     shared memory.
     """
+
     def _write_obs(maybe_dict_obs):
         flatdict = obs_to_dict(maybe_dict_obs)
         for k in keys:

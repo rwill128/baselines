@@ -6,6 +6,9 @@ import functools
 import collections
 import multiprocessing
 
+from tensorflow.python.training.saver import Saver
+
+
 def switch(condition, then_expression, else_expression):
     """Switches between two operations depending on a scalar value (int or bool).
     Note that both `then_expression` and `else_expression`
@@ -23,6 +26,7 @@ def switch(condition, then_expression, else_expression):
     x.set_shape(x_shape)
     return x
 
+
 # ================================================================
 # Extras
 # ================================================================
@@ -31,6 +35,7 @@ def lrelu(x, leak=0.2):
     f1 = 0.5 * (1 + leak)
     f2 = 0.5 * (1 - leak)
     return f1 * x + f2 * abs(x)
+
 
 # ================================================================
 # Mathematical utils
@@ -44,51 +49,59 @@ def huber_loss(x, delta=1.0):
         delta * (tf.abs(x) - 0.5 * delta)
     )
 
+
 # ================================================================
 # Global session
 # ================================================================
 
 def get_session(config=None):
     """Get default session or create one with a given config"""
-    sess = tf.get_default_session()
+    sess = tf.compat.v1.get_default_session()
     if sess is None:
         sess = make_session(config=config, make_default=True)
     return sess
+
 
 def make_session(config=None, num_cpu=None, make_default=False, graph=None):
     """Returns a session that will use <num_cpu> CPU's only"""
     if num_cpu is None:
         num_cpu = int(os.getenv('RCALL_NUM_CPU', multiprocessing.cpu_count()))
     if config is None:
-        config = tf.ConfigProto(
+        config = tf.compat.v1.ConfigProto(
             allow_soft_placement=True,
             inter_op_parallelism_threads=num_cpu,
             intra_op_parallelism_threads=num_cpu)
         config.gpu_options.allow_growth = True
 
     if make_default:
-        return tf.InteractiveSession(config=config, graph=graph)
+        return tf.compat.v1.InteractiveSession(config=config, graph=graph)
     else:
-        return tf.Session(config=config, graph=graph)
+        return tf.compat.v1.Session(config=config, graph=graph)
+
 
 def single_threaded_session():
     """Returns a session which will only use a single CPU"""
     return make_session(num_cpu=1)
 
+
 def in_session(f):
     @functools.wraps(f)
     def newfunc(*args, **kwargs):
-        with tf.Session():
+        with tf.compat.v1.Session():
             f(*args, **kwargs)
+
     return newfunc
+
 
 ALREADY_INITIALIZED = set()
 
+
 def initialize():
     """Initialize all the uninitialized variables in the global scope."""
-    new_variables = set(tf.global_variables()) - ALREADY_INITIALIZED
-    get_session().run(tf.variables_initializer(new_variables))
+    new_variables = set(tf.compat.v1.global_variables()) - ALREADY_INITIALIZED
+    get_session().run(tf.compat.v1.variables_initializer(new_variables))
     ALREADY_INITIALIZED.update(new_variables)
+
 
 # ================================================================
 # Model components
@@ -99,11 +112,13 @@ def normc_initializer(std=1.0, axis=0):
         out = np.random.randn(*shape).astype(dtype.as_numpy_dtype)
         out *= std / np.sqrt(np.square(out).sum(axis=axis, keepdims=True))
         return tf.constant(out)
+
     return _initializer
+
 
 def conv2d(x, num_filters, name, filter_size=(3, 3), stride=(1, 1), pad="SAME", dtype=tf.float32, collections=None,
            summary_tag=None):
-    with tf.variable_scope(name):
+    with tf.compat.v1.variable_scope(name):
         stride_shape = [1, stride[0], stride[1], 1]
         filter_shape = [filter_size[0], filter_size[1], int(x.get_shape()[3]), num_filters]
 
@@ -117,18 +132,19 @@ def conv2d(x, num_filters, name, filter_size=(3, 3), stride=(1, 1), pad="SAME", 
         # initialize weights with random weights
         w_bound = np.sqrt(6. / (fan_in + fan_out))
 
-        w = tf.get_variable("W", filter_shape, dtype, tf.random_uniform_initializer(-w_bound, w_bound),
-                            collections=collections)
-        b = tf.get_variable("b", [1, 1, 1, num_filters], initializer=tf.zeros_initializer(),
-                            collections=collections)
+        w = tf.compat.v1.get_variable("W", filter_shape, dtype, tf.compat.v1.random_uniform_initializer(-w_bound, w_bound),
+                                      collections=collections)
+        b = tf.compat.v1.get_variable("b", [1, 1, 1, num_filters], initializer=tf.zeros_initializer(),
+                                      collections=collections)
 
         if summary_tag is not None:
-            tf.summary.image(summary_tag,
+            tf.compat.v1.summary.image(summary_tag,
                              tf.transpose(tf.reshape(w, [filter_size[0], filter_size[1], -1, 1]),
                                           [2, 0, 1, 3]),
                              max_images=10)
 
         return tf.nn.conv2d(x, w, stride_shape, pad) + b
+
 
 # ================================================================
 # Theano-like Function
@@ -144,8 +160,8 @@ def function(inputs, outputs, updates=None, givens=None):
     on placeholder name (passed to constructor or accessible via placeholder.op.name).
 
     Example:
-        x = tf.placeholder(tf.int32, (), name="x")
-        y = tf.placeholder(tf.int32, (), name="y")
+        x = tf.compat.v1.placeholder(tf.int32, (), name="x")
+        y = tf.compat.v1.placeholder(tf.int32, (), name="y")
         z = 3 * x + 2 * y
         lin = function([x, y], z, givens={y: 0})
 
@@ -159,7 +175,7 @@ def function(inputs, outputs, updates=None, givens=None):
 
     Parameters
     ----------
-    inputs: [tf.placeholder, tf.constant, or object with make_feed_dict method]
+    inputs: [tf.compat.v1.placeholder, tf.constant, or object with make_feed_dict method]
         list of input arguments
     outputs: [tf.Variable] or tf.Variable
         list of outputs or a single output to be returned from function. Returned
@@ -211,6 +227,7 @@ class _Function(object):
         results = get_session().run(self.outputs_update, feed_dict=feed_dict)[:-1]
         return results
 
+
 # ================================================================
 # Flat vectors
 # ================================================================
@@ -221,11 +238,14 @@ def var_shape(x):
         "shape function assumes that shape is fully known"
     return out
 
+
 def numel(x):
     return intprod(var_shape(x))
 
+
 def intprod(x):
     return int(np.prod(x))
+
 
 def flatgrad(loss, var_list, clip_norm=None):
     grads = tf.gradients(loss, var_list)
@@ -236,33 +256,37 @@ def flatgrad(loss, var_list, clip_norm=None):
         for (v, grad) in zip(var_list, grads)
     ])
 
+
 class SetFromFlat(object):
     def __init__(self, var_list, dtype=tf.float32):
         assigns = []
         shapes = list(map(var_shape, var_list))
         total_size = np.sum([intprod(shape) for shape in shapes])
 
-        self.theta = theta = tf.placeholder(dtype, [total_size])
+        self.theta = theta = tf.compat.v1.placeholder(dtype, [total_size])
         start = 0
         assigns = []
         for (shape, v) in zip(shapes, var_list):
             size = intprod(shape)
-            assigns.append(tf.assign(v, tf.reshape(theta[start:start + size], shape)))
+            assigns.append(tf.compat.v1.assign(v, tf.reshape(theta[start:start + size], shape)))
             start += size
         self.op = tf.group(*assigns)
 
     def __call__(self, theta):
-        tf.get_default_session().run(self.op, feed_dict={self.theta: theta})
+        tf.compat.v1.get_default_session().run(self.op, feed_dict={self.theta: theta})
+
 
 class GetFlat(object):
     def __init__(self, var_list):
         self.op = tf.concat(axis=0, values=[tf.reshape(v, [numel(v)]) for v in var_list])
 
     def __call__(self):
-        return tf.get_default_session().run(self.op)
+        return tf.compat.v1.get_default_session().run(self.op)
+
 
 def flattenallbut0(x):
     return tf.reshape(x, [-1, intprod(x.get_shape().as_list()[1:])])
+
 
 # =============================================================
 # TF placeholders management
@@ -270,21 +294,23 @@ def flattenallbut0(x):
 
 _PLACEHOLDER_CACHE = {}  # name -> (placeholder, dtype, shape)
 
+
 def get_placeholder(name, dtype, shape):
     if name in _PLACEHOLDER_CACHE:
         out, dtype1, shape1 = _PLACEHOLDER_CACHE[name]
-        if out.graph == tf.get_default_graph():
+        if out.graph == tf.compat.v1.get_default_graph():
             assert dtype1 == dtype and shape1 == shape, \
-                'Placeholder with name {} has already been registered and has shape {}, different from requested {}'.format(name, shape1, shape)
+                'Placeholder with name {} has already been registered and has shape {}, different from requested {}'.format(
+                    name, shape1, shape)
             return out
 
-    out = tf.placeholder(dtype=dtype, shape=shape, name=name)
+    out = tf.compat.v1.placeholder(dtype=dtype, shape=shape, name=name)
     _PLACEHOLDER_CACHE[name] = (out, dtype, shape)
     return out
 
+
 def get_placeholder_cached(name):
     return _PLACEHOLDER_CACHE[name][0]
-
 
 
 # ================================================================
@@ -299,10 +325,10 @@ def display_var_info(vars):
         if "/Adam" in name or "beta1_power" in name or "beta2_power" in name: continue
         v_params = np.prod(v.shape.as_list())
         count_params += v_params
-        if "/b:" in name or "/bias" in name: continue    # Wx+b, bias is not interesting to look at => count params, but not print
-        logger.info("   %s%s %i params %s" % (name, " "*(55-len(name)), v_params, str(v.shape)))
+        if "/b:" in name or "/bias" in name: continue  # Wx+b, bias is not interesting to look at => count params, but not print
+        logger.info("   %s%s %i params %s" % (name, " " * (55 - len(name)), v_params, str(v.shape)))
 
-    logger.info("Total model parameters: %0.2f million" % (count_params*1e-6))
+    logger.info("Total model parameters: %0.2f million" % (count_params * 1e-6))
 
 
 def get_available_gpus(session_config=None):
@@ -318,6 +344,7 @@ def get_available_gpus(session_config=None):
     local_device_protos = device_lib.list_local_devices(session_config)
     return [x.name for x in local_device_protos if x.device_type == 'GPU']
 
+
 # ================================================================
 # Saving variables
 # ================================================================
@@ -326,8 +353,9 @@ def load_state(fname, sess=None):
     from baselines import logger
     logger.warn('load_state method is deprecated, please use load_variables instead')
     sess = sess or get_session()
-    saver = tf.train.Saver()
-    saver.restore(tf.get_default_session(), fname)
+    saver = Saver()
+    saver.restore(tf.compat.v1.get_default_session(), fname)
+
 
 def save_state(fname, sess=None):
     from baselines import logger
@@ -336,8 +364,9 @@ def save_state(fname, sess=None):
     dirname = os.path.dirname(fname)
     if any(dirname):
         os.makedirs(dirname, exist_ok=True)
-    saver = tf.train.Saver()
-    saver.save(tf.get_default_session(), fname)
+    saver = Saver()
+    saver.save(tf.compat.v1.get_default_session(), fname)
+
 
 # The methods above and below are clearly doing the same thing, and in a rather similar way
 # TODO: ensure there is no subtle differences and remove one
@@ -345,7 +374,7 @@ def save_state(fname, sess=None):
 def save_variables(save_path, variables=None, sess=None):
     import joblib
     sess = sess or get_session()
-    variables = variables or tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+    variables = variables or tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES)
 
     ps = sess.run(variables)
     save_dict = {v.name: value for v, value in zip(variables, ps)}
@@ -354,10 +383,11 @@ def save_variables(save_path, variables=None, sess=None):
         os.makedirs(dirname, exist_ok=True)
     joblib.dump(save_dict, save_path)
 
+
 def load_variables(load_path, variables=None, sess=None):
     import joblib
     sess = sess or get_session()
-    variables = variables or tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+    variables = variables or tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES)
 
     loaded_params = joblib.load(os.path.expanduser(load_path))
     restores = []
@@ -370,6 +400,7 @@ def load_variables(load_path, variables=None, sess=None):
             restores.append(v.assign(loaded_params[v.name]))
 
     sess.run(restores)
+
 
 # ================================================================
 # Shape adjustment for feeding into tf placeholders
@@ -419,6 +450,7 @@ def _check_shape(placeholder_shape, data_shape):
 def _squeeze_shape(shape):
     return [x for x in shape if x != 1]
 
+
 # ================================================================
 # Tensorboard interfacing
 # ================================================================
@@ -435,7 +467,7 @@ def launch_tensorboard_in_background(log_dir):
             summary_writer = tf.summary.FileWriter(tb_path, graph=session.graph)
             summary_op = tf.summary.merge_all()
             launch_tensorboard_in_background(tb_path)
-        session = tf.get_default_session()
+        session = tf.compat.v1.get_default_session()
         t = threading.Thread(target=start_tensorboard, args=([session]))
         t.start()
     '''

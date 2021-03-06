@@ -18,7 +18,6 @@ from baselines.common import set_global_seeds, tf_util as U
 from baselines.common.misc_util import boolean_flag
 from baselines.gail.dataset.mujoco_dset import Mujoco_Dset
 
-
 plt.style.use('ggplot')
 CONFIG = {
     'traj_limitation': [1, 5, 10, 50],
@@ -41,10 +40,9 @@ def argsparser():
 
 
 def evaluate_env(env_name, seed, policy_hidden_size, stochastic, reuse, prefix):
-
     def get_checkpoint_dir(checkpoint_list, limit, prefix):
         for checkpoint in checkpoint_list:
-            if ('limitation_'+str(limit) in checkpoint) and (prefix in checkpoint):
+            if ('limitation_' + str(limit) in checkpoint) and (prefix in checkpoint):
                 return checkpoint
         return None
 
@@ -64,7 +62,7 @@ def evaluate_env(env_name, seed, policy_hidden_size, stochastic, reuse, prefix):
     }
     for i, limit in enumerate(CONFIG['traj_limitation']):
         # Do one evaluation
-        upper_bound = sum(dataset.rets[:limit])/limit
+        upper_bound = sum(dataset.rets[:limit]) / limit
         checkpoint_dir = get_checkpoint_dir(checkpoint_list, limit, prefix=prefix)
         checkpoint_path = tf.train.latest_checkpoint(checkpoint_dir)
         env = gym.make(env_name + '-v1')
@@ -77,7 +75,7 @@ def evaluate_env(env_name, seed, policy_hidden_size, stochastic, reuse, prefix):
                                              number_trajs=10,
                                              stochastic_policy=stochastic,
                                              reuse=((i != 0) or reuse))
-        normalized_ret = avg_ret/upper_bound
+        normalized_ret = avg_ret / upper_bound
         print('Upper bound: {}, evaluation returns: {}, normalized scores: {}'.format(
             upper_bound, avg_ret, normalized_ret))
         log['traj_limitation'].append(limit)

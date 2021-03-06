@@ -59,7 +59,7 @@ def nn(input, layers_sizes, reuse=None, flatten=False, name=""):
     """
     for i, size in enumerate(layers_sizes):
         activation = tf.nn.relu if i < len(layers_sizes) - 1 else None
-        input = tf.layers.dense(inputs=input,
+        input = tf.compat.v1.layers.dense(inputs=input,
                                 units=size,
                                 kernel_initializer=tf.contrib.layers.xavier_initializer(),
                                 reuse=reuse,
@@ -82,6 +82,7 @@ def install_mpi_excepthook():
         sys.stdout.flush()
         sys.stderr.flush()
         MPI.COMM_WORLD.Abort()
+
     sys.excepthook = new_hook
 
 
@@ -100,8 +101,8 @@ def mpi_fork(n, extra_mpi_args=[]):
         )
         # "-bind-to core" is crucial for good performance
         args = ["mpirun", "-np", str(n)] + \
-            extra_mpi_args + \
-            [sys.executable]
+               extra_mpi_args + \
+               [sys.executable]
 
         args += sys.argv
         subprocess.check_call(args, env=env)

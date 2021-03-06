@@ -1,5 +1,6 @@
 import re
 import os
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 _atari7 = ['BeamRider', 'Breakout', 'Enduro', 'Pong', 'Qbert', 'Seaquest', 'SpaceInvaders']
@@ -52,27 +53,30 @@ _ATARI_SUFFIX = 'NoFrameskip-v4'
 register_benchmark({
     'name': 'Atari50M',
     'description': '7 Atari games from Mnih et al. (2013), with pixel observations, 50M timesteps',
-    'tasks': [{'desc': _game, 'env_id': _game + _ATARI_SUFFIX, 'trials': 2, 'num_timesteps': int(50e6)} for _game in _atari7]
+    'tasks': [{'desc': _game, 'env_id': _game + _ATARI_SUFFIX, 'trials': 2, 'num_timesteps': int(50e6)} for _game in
+              _atari7]
 })
 
 register_benchmark({
     'name': 'Atari10M',
     'description': '7 Atari games from Mnih et al. (2013), with pixel observations, 10M timesteps',
-    'tasks': [{'desc': _game, 'env_id': _game + _ATARI_SUFFIX, 'trials': 6, 'num_timesteps': int(10e6)} for _game in _atari7]
+    'tasks': [{'desc': _game, 'env_id': _game + _ATARI_SUFFIX, 'trials': 6, 'num_timesteps': int(10e6)} for _game in
+              _atari7]
 })
 
 register_benchmark({
     'name': 'Atari1Hr',
     'description': '7 Atari games from Mnih et al. (2013), with pixel observations, 1 hour of walltime',
-    'tasks': [{'desc': _game, 'env_id': _game + _ATARI_SUFFIX, 'trials': 2, 'num_seconds': 60 * 60} for _game in _atari7]
+    'tasks': [{'desc': _game, 'env_id': _game + _ATARI_SUFFIX, 'trials': 2, 'num_seconds': 60 * 60} for _game in
+              _atari7]
 })
 
 register_benchmark({
     'name': 'AtariExploration10M',
     'description': '7 Atari games emphasizing exploration, with pixel observations, 10M timesteps',
-    'tasks': [{'desc': _game, 'env_id': _game + _ATARI_SUFFIX, 'trials': 2, 'num_timesteps': int(10e6)} for _game in _atariexpl7]
+    'tasks': [{'desc': _game, 'env_id': _game + _ATARI_SUFFIX, 'trials': 2, 'num_timesteps': int(10e6)} for _game in
+              _atariexpl7]
 })
-
 
 # MuJoCo
 
@@ -107,7 +111,6 @@ register_benchmark({
     'description': '6 mujoco-like tasks from bullet, 1M steps',
     'tasks': [{'env_id': e, 'trials': 6, 'num_timesteps': int(1e6)} for e in _bulletsmall]
 })
-
 
 # Roboschool
 
@@ -150,7 +153,8 @@ _atari50 = [  # actually 47
 register_benchmark({
     'name': 'Atari50_10M',
     'description': '47 Atari games from Mnih et al. (2013), with pixel observations, 10M timesteps',
-    'tasks': [{'desc': _game, 'env_id': _game + _ATARI_SUFFIX, 'trials': 2, 'num_timesteps': int(10e6)} for _game in _atari50]
+    'tasks': [{'desc': _game, 'env_id': _game + _ATARI_SUFFIX, 'trials': 2, 'num_timesteps': int(10e6)} for _game in
+              _atari50]
 })
 
 # HER DDPG
@@ -161,4 +165,3 @@ register_benchmark({
     'description': 'Fetch* benchmarks for 1M timesteps',
     'tasks': [{'trials': 6, 'env_id': env_id, 'num_timesteps': int(1e6)} for env_id in _fetch_tasks]
 })
-

@@ -10,9 +10,9 @@ from baselines.common.tests import mark_slow
 # GitHub issue https://github.com/openai/baselines/issues/189
 common_kwargs = {
     'seed': 0,
-    'network':'cnn',
-    'gamma':0.9,
-    'pad':'SAME'
+    'network': 'cnn',
+    'gamma': 0.9,
+    'pad': 'SAME'
 }
 
 learn_args = {
@@ -25,7 +25,7 @@ learn_args = {
 }
 
 
-#tests pass, but are too slow on travis. Same algorithms are covered
+# tests pass, but are too slow on travis. Same algorithms are covered
 # by other tests with less compute-hungry nn's and by benchmarks
 @pytest.mark.skip
 @mark_slow
@@ -44,6 +44,7 @@ def test_mnist(alg):
     env_fn = lambda: MnistEnv(episode_len=100)
 
     simple_test(env_fn, learn_fn, 0.6)
+
 
 if __name__ == '__main__':
     test_mnist('acer')

@@ -13,7 +13,6 @@ DEFAULT_ENV_PARAMS = {
     },
 }
 
-
 DEFAULT_PARAMS = {
     # env
     'max_u': 1.,  # max absolute value of actions on different coordinates
@@ -46,14 +45,14 @@ DEFAULT_PARAMS = {
     'norm_eps': 0.01,  # epsilon used for observation normalization
     'norm_clip': 5,  # normalized observations are cropped to this values
 
-    'bc_loss': 0, # whether or not to use the behavior cloning loss as an auxilliary loss
-    'q_filter': 0, # whether or not a Q value filter should be used on the Actor outputs
-    'num_demo': 100, # number of expert demo episodes
-    'demo_batch_size': 128, #number of samples to be used from the demonstrations buffer, per mpi thread 128/1024 or 32/256
-    'prm_loss_weight': 0.001, #Weight corresponding to the primary loss
-    'aux_loss_weight':  0.0078, #Weight corresponding to the auxilliary loss also called the cloning loss
+    'bc_loss': 0,  # whether or not to use the behavior cloning loss as an auxilliary loss
+    'q_filter': 0,  # whether or not a Q value filter should be used on the Actor outputs
+    'num_demo': 100,  # number of expert demo episodes
+    'demo_batch_size': 128,
+    # number of samples to be used from the demonstrations buffer, per mpi thread 128/1024 or 32/256
+    'prm_loss_weight': 0.001,  # Weight corresponding to the primary loss
+    'aux_loss_weight': 0.0078,  # Weight corresponding to the auxilliary loss also called the cloning loss
 }
-
 
 CACHED_ENVS = {}
 
@@ -84,12 +83,13 @@ def prepare_params(kwargs):
             except ImportError:
                 MPI = None
                 mpi_rank = 0
-                logger.warn('Running with a single MPI process. This should work, but the results may differ from the ones publshed in Plappert et al.')
+                logger.warn(
+                    'Running with a single MPI process. This should work, but the results may differ from the ones publshed in Plappert et al.')
 
             max_episode_steps = env._max_episode_steps
-            env =  Monitor(env,
-                           os.path.join(logger.get_dir(), str(mpi_rank) + '.' + str(subrank)),
-                           allow_early_resets=True)
+            env = Monitor(env,
+                          os.path.join(logger.get_dir(), str(mpi_rank) + '.' + str(subrank)),
+                          allow_early_resets=True)
             # hack to re-expose _max_episode_steps (ideally should replace reliance on it downstream)
             env = gym.wrappers.TimeLimit(env, max_episode_steps=max_episode_steps)
         return env

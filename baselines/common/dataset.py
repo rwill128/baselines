@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Dataset(object):
     def __init__(self, data_map, deterministic=False, shuffle=True):
         self.data_map = data_map
@@ -30,7 +31,7 @@ class Dataset(object):
 
         data_map = dict()
         for key in self.data_map:
-            data_map[key] = self.data_map[key][cur_id:cur_id+cur_batch_size]
+            data_map[key] = self.data_map[key][cur_id:cur_id + cur_batch_size]
         return data_map
 
     def iterate_once(self, batch_size):
