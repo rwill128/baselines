@@ -166,6 +166,8 @@ def learn(env, policy_fn, *,
 
         logger.log("********** Iteration %i ************" % iters_so_far)
 
+        env.render()
+
         seg = seg_gen.__next__()
         add_vtarg_and_adv(seg, gamma, lam)
 

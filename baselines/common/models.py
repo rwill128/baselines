@@ -1,5 +1,7 @@
 import numpy as np
 import tensorflow as tf
+from tf_slim.layers.layers import convolution2d
+
 from baselines.a2c import utils
 from baselines.a2c.utils import conv, fc, conv_to_fc, batch_to_seq, seq_to_batch
 from baselines.common.mpi_running_mean_std import RunningMeanStd
@@ -251,7 +253,7 @@ def conv_only(convs=[(32, 8, 4), (64, 4, 2), (64, 3, 1)], **conv_kwargs):
         out = tf.cast(X, tf.float32) / 255.
         with tf.compat.v1.variable_scope("convnet"):
             for num_outputs, kernel_size, stride in convs:
-                out = tf.contrib.layers.convolution2d(out,
+                out = convolution2d(out,
                                                       num_outputs=num_outputs,
                                                       kernel_size=kernel_size,
                                                       stride=stride,

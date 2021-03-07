@@ -2,6 +2,8 @@ import gym
 
 from baselines import deepq
 
+import tensorflow
+tensorflow.compat.v1.disable_eager_execution()
 
 def callback(lcl, _glb):
     # stop training if reward exceeds 199
@@ -12,15 +14,16 @@ def callback(lcl, _glb):
 def main():
     env = gym.make("CartPole-v0")
     act = deepq.learn(
-        env,
+        env=env,
         network='mlp',
-        lr=1e-3,
+        lr=.001,
         total_timesteps=100000,
         buffer_size=50000,
         exploration_fraction=0.1,
         exploration_final_eps=0.02,
         print_freq=10,
-        callback=callback
+        callback=callback,
+        load_path="cartpole_model.pkl"
     )
     print("Saving model to cartpole_model.pkl")
     act.save("cartpole_model.pkl")

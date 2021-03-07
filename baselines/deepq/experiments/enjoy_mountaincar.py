@@ -3,6 +3,8 @@ import gym
 from baselines import deepq
 from baselines.common import models
 
+import tensorflow
+tensorflow.compat.v1.disable_eager_execution()
 
 def main():
     env = gym.make("MountainCar-v0")

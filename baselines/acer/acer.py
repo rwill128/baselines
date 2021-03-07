@@ -377,6 +377,7 @@ def learn(network, env, seed=None, nsteps=20, total_timesteps=int(80e6), q_coef=
 
     for acer.steps in range(0, total_timesteps,
                             nbatch):  # nbatch samples, 1 on_policy call and multiple off-policy calls
+        env.render()
         acer.call(on_policy=True)
         if replay_ratio > 0 and buffer.has_atleast(replay_start):
             n = np.random.poisson(replay_ratio)

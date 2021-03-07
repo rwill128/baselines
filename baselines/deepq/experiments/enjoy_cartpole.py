@@ -2,6 +2,8 @@ import gym
 
 from baselines import deepq
 
+import tensorflow
+tensorflow.compat.v1.disable_eager_execution()
 
 def main():
     env = gym.make("CartPole-v0")

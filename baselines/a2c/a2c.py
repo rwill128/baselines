@@ -202,6 +202,9 @@ def learn(
     tstart = time.time()
 
     for update in range(1, total_timesteps // nbatch + 1):
+
+        env.render()
+
         # Get mini batch of experiences
         obs, states, rewards, masks, actions, values, epinfos = runner.run()
         epinfobuf.extend(epinfos)
@@ -212,7 +215,7 @@ def learn(
         # Calculate the fps (frame per second)
         fps = int((update * nbatch) / nseconds)
         if update % log_interval == 0 or update == 1:
-            # Calculates if value function is a good predicator of the returns (ev > 1)
+            # Calculates if value function is a good predictor of the returns (ev > 1)
             # or if it's just worse than predicting nothing (ev =< 0)
             ev = explained_variance(values, rewards)
             logger.record_tabular("nupdates", update)
