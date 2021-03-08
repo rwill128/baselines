@@ -1,6 +1,7 @@
 # tests for tf_util
 import numpy as np
 import tensorflow as tf
+tf = tf.compat.v1
 
 from stable_baselines.common.tf_util import function, initialize, single_threaded_session, is_image
 

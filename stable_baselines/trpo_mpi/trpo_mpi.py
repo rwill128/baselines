@@ -5,6 +5,7 @@ from collections import deque
 import gym
 from mpi4py import MPI
 import tensorflow as tf
+tf = tf.compat.v1
 import numpy as np
 
 import stable_baselines.common.tf_util as tf_util

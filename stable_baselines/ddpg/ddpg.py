@@ -8,6 +8,7 @@ import warnings
 import gym
 import numpy as np
 import tensorflow as tf
+tf = tf.compat.v1
 import tensorflow.contrib as tc
 from mpi4py import MPI
 

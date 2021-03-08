@@ -34,6 +34,7 @@ And the worst of all, Tensorflow will not signal anything
 .. code-block:: python
 
   import tensorflow as tf
+tf = tf.compat.v1
   import numpy as np
 
   print("tensorflow test:")
@@ -122,6 +123,7 @@ however they will add operations to the Tensorflow graph and raise the computati
 .. code-block:: python
 
   import tensorflow as tf
+tf = tf.compat.v1
 
   print("tensorflow test:")
 
@@ -141,6 +143,7 @@ but this will also avoid overflow issues on floating point numbers:
 .. code-block:: python
 
   import tensorflow as tf
+tf = tf.compat.v1
   
   print("tensorflow overflow test:")
   
@@ -162,6 +165,7 @@ and catch propagation issues:
 .. code-block:: python
 
   import tensorflow as tf
+tf = tf.compat.v1
 
   print("tensorflow propagation test:")
   

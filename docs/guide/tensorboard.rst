@@ -86,6 +86,7 @@ Here is a simple example on how to log both additional tensor or arbitrary scala
 .. code-block:: python
 
   import tensorflow as tf
+tf = tf.compat.v1
   import numpy as np
 
   from stable_baselines import SAC

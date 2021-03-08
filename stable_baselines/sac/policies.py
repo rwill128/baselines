@@ -1,4 +1,5 @@
 import tensorflow as tf
+tf = tf.compat.v1
 import numpy as np
 from gym.spaces import Box
 

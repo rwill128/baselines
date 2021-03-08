@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 import tensorflow as tf
+tf = tf.compat.v1
 
 from stable_baselines import logger
 from stable_baselines.common import tf_util, OffPolicyRLModel, SetVerbosity, TensorboardWriter

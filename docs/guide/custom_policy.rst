@@ -13,6 +13,7 @@ using ``policy_kwargs`` parameter:
 
   import gym
   import tensorflow as tf
+tf = tf.compat.v1
 
   from stable_baselines import PPO2
 
@@ -188,6 +189,7 @@ If your task requires even more granular control over the policy architecture, y
 
   import gym
   import tensorflow as tf
+tf = tf.compat.v1
 
   from stable_baselines.common.policies import ActorCriticPolicy, register_policy, nature_cnn
   from stable_baselines.common.vec_env import DummyVecEnv

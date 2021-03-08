@@ -3,6 +3,7 @@ import time
 import gym
 import numpy as np
 import tensorflow as tf
+tf = tf.compat.v1
 
 from stable_baselines import logger
 from stable_baselines.common import explained_variance, ActorCriticRLModel, tf_util, SetVerbosity, TensorboardWriter

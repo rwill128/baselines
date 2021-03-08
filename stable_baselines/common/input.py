@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+tf = tf.compat.v1
 from gym.spaces import Discrete, Box, MultiBinary, MultiDiscrete
 
 

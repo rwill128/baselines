@@ -4,6 +4,7 @@ from collections import deque
 import gym
 import numpy as np
 import tensorflow as tf
+tf = tf.compat.v1
 from mpi4py import MPI
 
 from stable_baselines.common import Dataset, explained_variance, fmt_row, zipsame, ActorCriticRLModel, SetVerbosity, \

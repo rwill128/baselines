@@ -6,7 +6,8 @@ from typing import Set
 
 import numpy as np
 import tensorflow as tf
-
+tf = tf.compat.v1
+tf = tf.compat.v1
 
 def is_image(tensor):
     """
@@ -49,7 +50,7 @@ def seq_to_batch(tensor_sequence, flat=False):
     shape = tensor_sequence[0].get_shape().as_list()
     if not flat:
         assert len(shape) > 1
-        n_hidden = tensor_sequence[0].get_shape()[-1].value
+        n_hidden = tensor_sequence[0].get_shape()[-1]
         return tf.reshape(tf.concat(axis=1, values=tensor_sequence), [-1, n_hidden])
     else:
         return tf.reshape(tf.stack(values=tensor_sequence, axis=1), [-1])

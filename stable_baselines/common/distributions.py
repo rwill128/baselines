@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+tf = tf.compat.v1
 from tensorflow.python.ops import math_ops
 from gym import spaces
 

@@ -1,4 +1,5 @@
 import tensorflow as tf
+tf = tf.compat.v1
 
 
 def gmatmul(tensor_a, tensor_b, transpose_a=False, transpose_b=False, reduce_dim=None):

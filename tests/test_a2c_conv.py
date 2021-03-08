@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 import tensorflow as tf
+tf = tf.compat.v1
 
 from stable_baselines.common.tf_layers import conv
 from stable_baselines.common.input import observation_input

@@ -11,6 +11,7 @@ import gym
 import cloudpickle
 import numpy as np
 import tensorflow as tf
+tf = tf.compat.v1
 
 from stable_baselines.common.misc_util import set_global_seeds
 from stable_baselines.common.save_util import data_to_json, json_to_data, params_to_bytes, bytes_to_params

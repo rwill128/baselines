@@ -1,6 +1,7 @@
 from functools import partial
 
 import tensorflow as tf
+tf = tf.compat.v1
 import numpy as np
 import gym
 
@@ -195,6 +196,7 @@ class DQN(OffPolicyRLModel):
                 obs_ = self._vec_normalize_env.get_original_obs().squeeze()
 
             for _ in range(total_timesteps):
+                self.env.render()
                 # Take action and update exploration to the newest value
                 kwargs = {}
                 if not self.param_noise:

@@ -2,6 +2,7 @@ import time
 import warnings
 
 import tensorflow as tf
+tf = tf.compat.v1
 from gym.spaces import Box, Discrete
 
 from stable_baselines import logger

@@ -4,6 +4,7 @@ I follow the architecture from the official repository
 """
 import gym
 import tensorflow as tf
+tf = tf.compat.v1
 import numpy as np
 
 from stable_baselines.common.mpi_running_mean_std import RunningMeanStd

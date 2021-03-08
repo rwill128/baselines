@@ -2,6 +2,7 @@ import re
 from functools import reduce
 
 import tensorflow as tf
+tf = tf.compat.v1
 import numpy as np
 
 from stable_baselines.acktr.kfac_utils import detect_min_val, factor_reshape, gmatmul
@@ -141,7 +142,7 @@ class KfacOptimizer:
                     # Known OPs
                     b_tensor = [_i for _i in bprop_op.inputs if 'gradientsSampled' in _i.name][-1]
                     b_tensor_shape = fprop_op.outputs[0].get_shape()
-                    if b_tensor.get_shape()[0].value is None:
+                    if b_tensor.get_shape()[0] is None:
                         b_tensor.set_shape(b_tensor_shape)
                     b_tensors.append(b_tensor)
 
@@ -159,7 +160,7 @@ class KfacOptimizer:
                         # only if tensor shape is defined, usually this will prevent tensor like Sum:0 to be used.
                         if b_tensor.get_shape():
                             b_tensor_shape = fprop_op.outputs[0].get_shape()
-                            if len(b_tensor.get_shape()) > 0 and b_tensor.get_shape()[0].value is None:
+                            if len(b_tensor.get_shape()) > 0 and b_tensor.get_shape()[0] is None:
                                 b_tensor.set_shape(b_tensor_shape)
                             b_tensors.append(b_tensor)
                     fprop_op_name = 'UNK-' + fprop_op.op_def.name
@@ -586,7 +587,7 @@ class KfacOptimizer:
                     for key in ['fprop_concat_stats', 'bprop_concat_stats']:
                         for stats_var in stats[var][key]:
                             if stats_var not in tmp_eigen_cache:
-                                stats_dim = stats_var.get_shape()[1].value
+                                stats_dim = stats_var.get_shape()[1]
                                 eigen_values = tf.Variable(tf.ones(
                                     [stats_dim]), name='KFAC_FAC/' + stats_var.name.split(':')[0] + '/e',
                                     trainable=False)

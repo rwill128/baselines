@@ -1,5 +1,6 @@
 import mpi4py
 import tensorflow as tf
+tf = tf.compat.v1
 import numpy as np
 
 import stable_baselines.common.tf_util as tf_util

@@ -4,6 +4,7 @@ import os
 
 import gym
 import tensorflow as tf
+tf = tf.compat.v1
 import numpy as np
 from mpi4py import MPI
 
